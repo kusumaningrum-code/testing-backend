@@ -27,7 +27,10 @@ model Event {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organiser User @relation(fields: [organiserId], references: [id], name: "UserEvents")
+  organiser  User        @relation(fields: [organiserId], references: [id], name: "UserEvents")
+  reviews    Review[]
+  tickets    Ticket[]
+  promotions Promotion[]
 }
 
 model User {
@@ -47,11 +50,63 @@ model User {
   points       Int
   events       Event[]  @relation("UserEvents")
 
-  referredByUser User?  @relation("Referral", fields: [referredBy], references: [id])
-  referrals      User[] @relation("Referral")
+  referredByUser User?    @relation("Referral", fields: [referredBy], references: [id])
+  referrals      User[]   @relation("Referral")
+  reviews        Review[]
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  eventId   Int
+  userId    Int
+  rating    Int      @default(0)
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [event_id])
+  user  User  @relation(fields: [userId], references: [id])
+}
+
+model Ticket {
+  ticket_id  Int        @id @default(autoincrement())
+  eventId    Int
+  ticketType TicketType
+  price      Int
+  available  Int
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  event Event @relation(fields: [eventId], references: [event_id])
+}
+
+model Promotion {
+  promotion_id   Int           @id @default(autoincrement())
+  eventId        Int
+  type           PromotionType
+  value          Int
+  promotionCode  String        @unique
+  startDate      DateTime
+  expirationDate DateTime
+  maxUse         Int
+  useCount       Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  event Event @relation(fields: [eventId], references: [event_id])
 }
 
 enum Role {
   CUSTOMER
   ORGANIZER
+}
+
+enum TicketType {
+  REGULAR
+  VIP
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FLAT
 }
