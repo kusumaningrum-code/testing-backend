@@ -129,4 +129,68 @@ export class EventsController {
       res.status(500).json({ error: "Failed to create event" });
     }
   }
+
+  //update event
+  async updateEvent(req: Request, res: Response): Promise<any> {
+    const eventId = parseInt(req.params.id);
+    const { name, description, price, date, time, location, availableSeats } =
+      req.body;
+
+    try {
+      const event = await prisma.event.findUnique({
+        where: { event_id: eventId },
+      });
+
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+
+      const dateTime = date && time ? new Date(`${date}T${time}.000Z`) : null;
+      if (date && time && isNaN(dateTime!.getTime())) {
+        return res.status(400).json({ error: "Invalid date or time format" });
+      }
+
+      const updatedEvent = await prisma.event.update({
+        where: { event_id: eventId },
+        data: {
+          ...(name && { name }),
+          ...(description && { description }),
+          ...(price !== undefined && { price }),
+          ...(date && { date: new Date(date) }),
+          ...(time && { time: dateTime }),
+          ...(location && { location }),
+          ...(availableSeats !== undefined && { availableSeats }),
+        },
+      });
+
+      res.json(updatedEvent);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to update event" });
+    }
+  }
+
+  //delete event
+  async deleteEvent(req: Request, res: Response): Promise<any> {
+    const eventId = parseInt(req.params.id);
+
+    try {
+      const event = await prisma.event.findUnique({
+        where: { event_id: eventId },
+      });
+
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+
+      await prisma.event.delete({
+        where: { event_id: eventId },
+      });
+
+      res.json({ message: "Event deleted successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to delete event" });
+    }
+  }
 }
